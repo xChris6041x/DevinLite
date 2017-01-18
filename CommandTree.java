@@ -55,6 +55,39 @@ public class CommandTree {
 		this(label, null);
 	}
 	
+	
+	/**
+	 * @return the label of this command.
+	 */
+	public String getLabel() { 
+		return label; 
+	}
+	
+	/**
+	 * Set the label of this command tree.
+	 * @param label - The new label.
+	 * @return
+	 */
+	public void setLabel(String label) {
+		this.label = label; 
+	}
+	
+	/**
+	 * @return the command executor that will run when this is executed.
+	 */
+	public CommandExecutor getExecutor() {
+		return executor;
+	}
+	
+	/**
+	 * Set the command executor that will run when this is executed.
+	 * @param executor - The new command executor.
+	 */
+	public void setExecutor(CommandExecutor executor) {
+		this.executor = executor;
+	}
+	
+	
 	/**
 	 * @return the parent of this CommandTree.
 	 */
