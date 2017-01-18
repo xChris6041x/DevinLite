@@ -24,8 +24,6 @@
  * 
  * For more information, please refer to <http://unlicense.org>
  */
-package io.xchris6041x.devinlite;
-
 import java.util.List;
 
 import org.bukkit.command.CommandExecutor;
