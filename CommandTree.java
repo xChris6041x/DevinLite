@@ -48,9 +48,33 @@ public class CommandTree {
 	public CommandTree(String label, CommandExecutor executor) {
 		this.label = label;
 		this.executor = executor;
+		
+		this.children = new ArrayList<CommandTree>();
 	}
 	public CommandTree(String label) {
 		this(label, null);
+	}
+	
+	/**
+	 * @return the parent of this CommandTree.
+	 */
+	public CommandTree getParent() {
+		return parent;
+	}
+	
+	/**
+	 * Set the parent of this command tree and fix the old parent so it
+	 * no longer contains this as a child.
+	 * 
+	 * @param parent - The new parent.
+	 */
+	public void setParent(CommandTree parent) {
+		if(this.parent != null) {
+			this.parent.children.remove(this);
+		}
+		this.parent = parent;
+		
+		parent.children.add(this);
 	}
 	
 }
