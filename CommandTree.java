@@ -77,4 +77,15 @@ public class CommandTree {
 		parent.children.add(this);
 	}
 	
+	/**
+	 * @param label
+	 * @return a child with a specific {@code label}.
+	 */
+	public CommandTree getChild(String label) {
+		for(CommandTree child : children) {
+			if(child.label.equalsIgnoreCase(label)) return child;
+		}
+		return null;
+	}
+	
 }
