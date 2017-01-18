@@ -24,6 +24,7 @@
  * 
  * For more information, please refer to <http://unlicense.org>
  */
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -117,7 +118,7 @@ public class CommandTree {
 	 * @return a child with a specific {@code label}.
 	 */
 	public CommandTree getChild(String label) {
-		getChildByLabels(label);
+		return getChild(label);
 	}
 	
 	/**
@@ -132,7 +133,7 @@ public class CommandTree {
 				}
 				else {
 					labels.remove(0);
-					return child.getChildByLabels(labels);
+					return child.getChild(labels);
 				}
 			}
 		}
@@ -144,8 +145,8 @@ public class CommandTree {
 	 * @param labels
 	 * @return a child that follows the structure label[0] label[1] label[2]... label[n].
 	 */
-	public CommandTree getChild(Label... labels) {
-		getChildrenByLabels(Arrays.asList(labels));
+	public CommandTree getChild(String... labels) {
+		return getChild(Arrays.asList(labels));
 	}
 	
 }
