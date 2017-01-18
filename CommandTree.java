@@ -29,7 +29,8 @@ import java.util.List;
 import org.bukkit.command.CommandExecutor;
 
 /**
- * A class that handles sub commands, so you don't have to worry about it. Each sub command has to be it's own CommandExecutor.
+ * A class that handles the command and the sub commands of that command,
+ * then hands the proper information to the CommandExecutor.
  * 
  * @version 0.1.0
  * @author Christopher Bishop (xChris6041x)
@@ -44,8 +45,12 @@ public class CommandTree {
 	private CommandExecutor executor;
 	
 	
-	public CommandTree(CommandExecutor executor) {
+	public CommandTree(String label, CommandExecutor executor) {
+		this.label = label;
 		this.executor = executor;
+	}
+	public CommandTree(String label) {
+		this(label, null);
 	}
 	
 }
