@@ -24,6 +24,7 @@
  * 
  * For more information, please refer to <http://unlicense.org>
  */
+import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.command.CommandExecutor;
@@ -110,15 +111,41 @@ public class CommandTree {
 		parent.children.add(this);
 	}
 	
+	
 	/**
 	 * @param label
 	 * @return a child with a specific {@code label}.
 	 */
 	public CommandTree getChild(String label) {
+		getChildByLabels(label);
+	}
+	
+	/**
+	 * @param labels
+	 * @return a child that follows the structure label[0] label[1] label[2]... label[n].
+	 */
+	public CommandTree getChild(List<String> labels) {
 		for(CommandTree child : children) {
-			if(child.label.equalsIgnoreCase(label)) return child;
+			if(child.label.equalsIgnoreCase(labels.get(0))) {
+				if(labels.size() == 1) {
+					return child;
+				}
+				else {
+					labels.remove(0);
+					return child.getChildByLabels(labels);
+				}
+			}
 		}
-		return null;
+		
+		throw new IllegalArgumentException("There is no child inside " + label + " labeled " + labels.get(0));
+	}
+	
+	/**
+	 * @param labels
+	 * @return a child that follows the structure label[0] label[1] label[2]... label[n].
+	 */
+	public CommandTree getChild(Label... labels) {
+		getChildrenByLabels(Arrays.asList(labels));
 	}
 	
 }
