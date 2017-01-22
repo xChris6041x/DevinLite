@@ -133,7 +133,7 @@ public class CommandTree implements CommandExecutor {
 	 * @param labels - All the labels and aliases for each child.
 	 * @throws IllegalArgumentException if there are no labels available or there's a duplicate command.
 	 */
-	public void add(CommandExecutor executor, String[]... labels) throws IllegalArgumentException {
+	public void addChild(CommandExecutor executor, String[]... labels) throws IllegalArgumentException {
 		if(labels.length == 0 || labels[0].length == 0) throw new IllegalArgumentException("Cannot add an executor to a child with no labels");
 		
 		// Find an existing child.
@@ -159,7 +159,7 @@ public class CommandTree implements CommandExecutor {
 			}
 		}
 		else {
-			child.add(executor, CommandTree.removeFirst(labels));
+			child.addChild(executor, CommandTree.removeFirst(labels));
 		}
 	}
 	
@@ -171,14 +171,14 @@ public class CommandTree implements CommandExecutor {
 	 * @param structure - The structure of the children. It should be in <a href="https://github.com/xChris6041x/DevinLite/tree/master">this format</a>.
 	 * @throws IllegalArgumentException if there are no labels available or there's a duplicate command.
 	 */
-	public void add(CommandExecutor executor, String structure) throws IllegalArgumentException {
+	public void addChild(CommandExecutor executor, String structure) throws IllegalArgumentException {
 		String[] splits = structure.split(" ");
 		String[][] labels = new String[splits.length][];
 		for(int i = 0; i < splits.length; i++) {
 			labels[i] = splits[i].split("|");
 		}
 		
-		add(executor, labels);
+		addChild(executor, labels);
 	}
 	
 	/* The Command */
