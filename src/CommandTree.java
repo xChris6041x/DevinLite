@@ -67,9 +67,11 @@ public class CommandTree implements CommandExecutor {
 	 * 
 	 * @since 0.1.0
 	 * @param executor - The executor that is being used to set.
+	 * @return itself for chaining.
 	 */
-	public void setExecutor(CommandExecutor executor) {
+	public CommandTree setExecutor(CommandExecutor executor) {
 		this.executor = executor;
+		return this;
 	}
 	
 	
@@ -131,9 +133,10 @@ public class CommandTree implements CommandExecutor {
 	 * @since 0.1.0
 	 * @param executor - The executor the last child will use.
 	 * @param labels - All the labels and aliases for each child.
+	 * @return itself for chaining.
 	 * @throws IllegalArgumentException if there are no labels available or there's a duplicate command.
 	 */
-	public void addChild(CommandExecutor executor, String[]... labels) throws IllegalArgumentException {
+	public CommandTree addChild(CommandExecutor executor, String[]... labels) throws IllegalArgumentException {
 		if(labels.length == 0 || labels[0].length == 0) throw new IllegalArgumentException("Cannot add an executor to a child with no labels");
 		
 		// Find an existing child.
@@ -161,6 +164,8 @@ public class CommandTree implements CommandExecutor {
 		else {
 			child.addChild(executor, CommandTree.removeFirst(labels));
 		}
+		
+		return this;
 	}
 	
 	/**
@@ -169,16 +174,17 @@ public class CommandTree implements CommandExecutor {
 	 * @since 0.1.0
 	 * @param executor - The executor the last child will use.
 	 * @param structure - The structure of the children. It should be in <a href="https://github.com/xChris6041x/DevinLite/tree/master">this format</a>.
+	 * @return itself for chaining.
 	 * @throws IllegalArgumentException if there are no labels available or there's a duplicate command.
 	 */
-	public void addChild(CommandExecutor executor, String structure) throws IllegalArgumentException {
+	public CommandTree addChild(CommandExecutor executor, String structure) throws IllegalArgumentException {
 		String[] splits = structure.split(" ");
 		String[][] labels = new String[splits.length][];
 		for(int i = 0; i < splits.length; i++) {
 			labels[i] = splits[i].split("|");
 		}
 		
-		addChild(executor, labels);
+		return addChild(executor, labels);
 	}
 	
 	/* The Command */
