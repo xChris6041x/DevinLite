@@ -28,7 +28,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 
 /**
  * A class that handles the command and the sub commands of that command,
@@ -37,7 +39,7 @@ import org.bukkit.command.CommandExecutor;
  * @version 0.1.0
  * @author Christopher Bishop (xChris6041x)
  */
-public class CommandTree {
+public class CommandTree implements CommandExecutor {
 
 	private String label;
 	
@@ -72,6 +74,14 @@ public class CommandTree {
 	 */
 	public void setLabel(String label) {
 		this.label = label; 
+	}
+	
+	/**
+	 * @param label
+	 * @return whether the {@code label} is a valid label for this command tree.
+	 */
+	public boolean isValidLabel(String label) {
+		return label.equalsIgnoreCase(this.label);
 	}
 	
 	/**
@@ -122,12 +132,15 @@ public class CommandTree {
 	}
 	
 	/**
+	 * Note: This will consume the list, so it is not meant to be used outside the
+	 * getChild(Labels...) command.
+	 * 
 	 * @param labels
 	 * @return a child that follows the structure label[0] label[1] label[2]... label[n].
 	 */
-	public CommandTree getChild(List<String> labels) {
+	private CommandTree getChild(List<String> labels) {
 		for(CommandTree child : children) {
-			if(child.label.equalsIgnoreCase(labels.get(0))) {
+			if(child.isValidLabel(labels.get(0))) {
 				if(labels.size() == 1) {
 					return child;
 				}
@@ -147,6 +160,31 @@ public class CommandTree {
 	 */
 	public CommandTree getChild(String... labels) {
 		return getChild(Arrays.asList(labels));
+	}
+	
+	
+	// TODO: Finish executor!
+	
+	@Override
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+		if(!isValidLabel(label)) return false;
+		if(args.length > 0) {
+			CommandTree child = this.getChild(args[0]);
+			if(child == null) {
+				return (executor == null) ? false : executor.onCommand(sender, cmd, label, args);
+			}
+			else {
+				String[] newArgs = new String[args.length - 1];
+				for(int i = 1; i < args.length; i++) {
+					newArgs[i - 1] = args[i];
+				}
+				
+				return child.onCommand(sender, cmd, args[0], newArgs);
+			}
+		}
+		else {
+			return (executor == null) ? false : executor.onCommand(sender, cmd, label, args);
+		}
 	}
 	
 }
