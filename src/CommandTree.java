@@ -24,9 +24,10 @@
  * 
  * For more information, please refer to <http://unlicense.org>
  */
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -40,60 +41,32 @@ import org.bukkit.command.CommandSender;
  * @author Christopher Bishop (xChris6041x)
  */
 public class CommandTree implements CommandExecutor {
-
-	private String label;
-	
-	private CommandTree parent;
-	private List<CommandTree> children;
 	
 	private CommandExecutor executor;
+	private Map<String[], CommandTree> children;
 	
 	
-	public CommandTree(String label, CommandExecutor executor) {
-		this.label = label;
+	public CommandTree(CommandExecutor executor) {
 		this.executor = executor;
-		
-		this.children = new ArrayList<CommandTree>();
+		this.children = new HashMap<String[], CommandTree>();
 	}
-	public CommandTree(String label) {
-		this(label, null);
+	public CommandTree() {
+		this(null);
 	}
 	
-	
-	/**
-	 * @return the label of this command.
-	 */
-	public String getLabel() { 
-		return label; 
-	}
 	
 	/**
-	 * Set the label of this command tree.
-	 * @param label - The new label.
-	 * @return
-	 */
-	public void setLabel(String label) {
-		this.label = label; 
-	}
-	
-	/**
-	 * @param label
-	 * @return whether the {@code label} is a valid label for this command tree.
-	 */
-	public boolean isValidLabel(String label) {
-		return label.equalsIgnoreCase(this.label);
-	}
-	
-	/**
-	 * @return the command executor that will run when this is executed.
+	 * @since 0.1.0
+	 * @return the {@code CommandExecutor} that will be executed.
 	 */
 	public CommandExecutor getExecutor() {
 		return executor;
 	}
-	
 	/**
-	 * Set the command executor that will run when this is executed.
-	 * @param executor - The new command executor.
+	 * Set the current executor to {@code executor}.
+	 * 
+	 * @since 0.1.0
+	 * @param executor - The executor that is being used to set.
 	 */
 	public void setExecutor(CommandExecutor executor) {
 		this.executor = executor;
@@ -101,90 +74,160 @@ public class CommandTree implements CommandExecutor {
 	
 	
 	/**
-	 * @return the parent of this CommandTree.
+	 * @since 0.1.0
+	 * @param label - The label to search for.
+	 * @param deepSearch - Whether to search through all the children's children to find that label.
+	 * @return the {@code CommandTree} child that was found or null if nothing was found.
 	 */
-	public CommandTree getParent() {
-		return parent;
-	}
-	
-	/**
-	 * Set the parent of this command tree and fix the old parent so it
-	 * no longer contains this as a child.
-	 * 
-	 * @param parent - The new parent.
-	 */
-	public void setParent(CommandTree parent) {
-		if(this.parent != null) {
-			this.parent.children.remove(this);
-		}
-		this.parent = parent;
-		
-		parent.children.add(this);
-	}
-	
-	
-	/**
-	 * @param label
-	 * @return a child with a specific {@code label}.
-	 */
-	public CommandTree getChild(String label) {
-		return getChild(label);
-	}
-	
-	/**
-	 * Note: This will consume the list, so it is not meant to be used outside the
-	 * getChild(Labels...) command.
-	 * 
-	 * @param labels
-	 * @return a child that follows the structure label[0] label[1] label[2]... label[n].
-	 */
-	private CommandTree getChild(List<String> labels) {
-		for(CommandTree child : children) {
-			if(child.isValidLabel(labels.get(0))) {
-				if(labels.size() == 1) {
-					return child;
+	public CommandTree getChild(String label, boolean deepSearch) {
+		for(Entry<String[], CommandTree> child : children.entrySet()) {
+			for(String lbl : child.getKey()) {
+				if(lbl.equalsIgnoreCase(label)) {
+					return child.getValue();
 				}
-				else {
-					labels.remove(0);
-					return child.getChild(labels);
+				else if(deepSearch) {
+					CommandTree commandChild = child.getValue().getChild(label, deepSearch);
+					if(commandChild != null) return commandChild;
 				}
 			}
 		}
-		
-		throw new IllegalArgumentException("There is no child inside " + label + " labeled " + labels.get(0));
+		return null;
 	}
 	
 	/**
-	 * @param labels
-	 * @return a child that follows the structure label[0] label[1] label[2]... label[n].
+	 * @since 0.1.0
+	 * @param labels - The labels that match the child labels in order.
+	 * @return the {@code CommandTree} child that matches all the {@code labels}, or null if not matching.
 	 */
 	public CommandTree getChild(String... labels) {
-		return getChild(Arrays.asList(labels));
+		if(labels.length == 0) return null;
+		for(Entry<String[], CommandTree> child : children.entrySet()) {
+			for(String lbl : child.getKey()) {
+				if(lbl.equalsIgnoreCase(labels[0])) {
+					if(labels.length == 1) {
+						return child.getValue();
+					}
+					else {
+						return child.getValue().getChild(CommandTree.removeFirst(labels));
+					}
+				}
+			}
+		}
+		return null;
 	}
 	
+	/**
+	 * @since 0.1.0
+	 * @param structure - The structure that the children will follow separated by spaces. Ex: "root sub1 sub2"
+	 * @return the {@code CommandTree} child that follows the {@code structure}
+	 */
+	public CommandTree getChild(String structure) {
+		return getChild(structure.split(" "));
+	}
 	
-	// TODO: Finish executor!
+	/**
+	 * Add a child to this {@code CommandTree}.
+	 * 
+	 * @since 0.1.0
+	 * @param executor - The executor the last child will use.
+	 * @param labels - All the labels and aliases for each child.
+	 * @throws IllegalArgumentException if there are no labels available or there's a duplicate command.
+	 */
+	public void add(CommandExecutor executor, String[]... labels) throws IllegalArgumentException {
+		if(labels.length == 0 || labels[0].length == 0) throw new IllegalArgumentException("Cannot add an executor to a child with no labels");
+		
+		// Find an existing child.
+		CommandTree child = null;
+		String lbl = "";
+		for(String label : labels[0]) {
+			CommandTree commandChild = getChild(label);
+			if(commandChild != null) {
+				child = commandChild;
+				lbl = label;
+				break;
+			}
+		}
+		
+		// Add the executor to the child or go deeper.
+		if(child == null) child = new CommandTree();
+		if(labels.length == 1) {
+			if(child.getExecutor() == null) {
+				child.setExecutor(executor);
+			}
+			else {
+				throw new IllegalArgumentException("Cannot have two commands with the same label \"" + lbl + "\".");
+			}
+		}
+		else {
+			child.add(executor, CommandTree.removeFirst(labels));
+		}
+	}
 	
+	/**
+	 * Add a child to this {@code CommandTree}.
+	 * 
+	 * @since 0.1.0
+	 * @param executor - The executor the last child will use.
+	 * @param structure - The structure of the children. It should be in <a href="https://github.com/xChris6041x/DevinLite/tree/master">this format</a>.
+	 * @throws IllegalArgumentException if there are no labels available or there's a duplicate command.
+	 */
+	public void add(CommandExecutor executor, String structure) throws IllegalArgumentException {
+		String[] splits = structure.split(" ");
+		String[][] labels = new String[splits.length][];
+		for(int i = 0; i < splits.length; i++) {
+			labels[i] = splits[i].split("|");
+		}
+		
+		add(executor, labels);
+	}
+	
+	/* The Command */
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		if(!isValidLabel(label)) return false;
 		if(args.length > 0) {
 			CommandTree child = this.getChild(args[0]);
 			if(child == null) {
 				return (executor == null) ? false : executor.onCommand(sender, cmd, label, args);
 			}
 			else {
-				String[] newArgs = new String[args.length - 1];
-				for(int i = 1; i < args.length; i++) {
-					newArgs[i - 1] = args[i];
-				}
+				String lbl = args[0];
+				String[] newArgs = CommandTree.removeFirst(args);
 				
-				return child.onCommand(sender, cmd, args[0], newArgs);
+				return child.onCommand(sender, cmd, lbl, newArgs);
 			}
 		}
 		else {
 			return (executor == null) ? false : executor.onCommand(sender, cmd, label, args);
 		}
+	}
+	
+	
+	/**
+	 * @since 0.1.0
+	 * @param arr - The array which needs the first element removed.
+	 * @return An array which is a duplicate of {@code arr} except the first element is removed.
+	 */
+	public static String[] removeFirst(String[] arr) {
+		String[] newArr = new String[arr.length - 1];
+		for(int i = 1; i < arr.length; i++) {
+			newArr[i - 1] = arr[i];
+		}
+		
+		return newArr;
+	}
+	
+	/**
+	 * @since 0.1.0
+	 * @param arr - The array of arrays which needs the first element removed.
+	 * @return An array which is a duplicate of {@code arr} except the first element is removed.
+	 */
+	public static String[][] removeFirst(String[][] arr) {
+		String[][] newArr = new String[arr.length - 1][];
+		for(int i = 1; i < arr.length; i++) {
+			newArr[i - 1] = arr[i];
+		}
+		
+		return newArr;
 	}
 	
 }
